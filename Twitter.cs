@@ -10,15 +10,19 @@ public class Twitter
 
     public void getTwitterInformation()
     {
-        var a = new Twitter();
-        a.SetKey();
-        a.Createoken();
-        a.SearchTweet(5, "セザンヌ新商品情報");
+        Console.Write("ツイートを取得したいユーザのIDを入力: ");
+        var userId = Console.ReadLine() ?? "";
+        var tweet = new Twitter();
+
+        tweet.SetKey();
+        tweet.Createoken();
+        tweet.SearchTweet(100, userId);
     }
 
     private void SetKey()
     {
         DotNetEnv.Env.Load("./.env");
+        
         //Twitter認証用セッション変数
         consumerKey = DotNetEnv.Env.GetString("CONSUMER_KEY");
         consumerKeySecret = DotNetEnv.Env.GetString("CONSUMER_KEY_SECRET");
@@ -31,20 +35,26 @@ public class Twitter
         Token = CoreTweet.Tokens.Create(consumerKey, consumerKeySecret, accessToken, accessTokenSecret);
     }
 
-    public void SearchTweet(int cnt, string keyword)
+    public void SearchTweet(int cnt, string key)
     {
+        var keyword = "from:" + key + " exclude:retweets"; 
         try {
             var tweets = Token!.Search.Tweets(count => cnt, q => keyword);
-            foreach (var tweet in tweets)
-            {
-                Console.WriteLine($"ユーザID: {tweet.User.ScreenName}");
-                Console.WriteLine($"ユーザ名: {tweet.User.Name}");
-                Console.WriteLine($"ツイート: {tweet.Text}\n");
+            if (tweets.Count == 0) {
+                Console.WriteLine("該当するユーザまたはツイートが見つかりません。");
+            }
+            else {
+                foreach (var tweet in tweets)
+                {
+                    Console.WriteLine($"ユーザID: {tweet.User.ScreenName}");
+                    Console.WriteLine($"ユーザ名: {tweet.User.Name}");
+                    Console.WriteLine($"ツイート日時: {tweet.CreatedAt}");
+                    Console.WriteLine($"ツイート: {tweet.Text}\n");
+                }
             }
         }
         catch (TwitterException e)
         {
-            // recover from exception
             Console.WriteLine(e);
         }
     }
